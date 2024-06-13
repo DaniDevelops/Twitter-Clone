@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 
 import Posts from "../../Components/Common/Posts";
 import ProfileHeaderSkeleton from "../../Components/Skeletons/ProfileHeaderSkeleton";
@@ -11,6 +11,10 @@ import { FaArrowLeft } from "react-icons/fa6";
 import { IoCalendarOutline } from "react-icons/io5";
 import { FaLink } from "react-icons/fa";
 import { MdEdit } from "react-icons/md";
+import { useQuery } from "react-query";
+import { getClientProfile } from "../../api-client";
+import { formatMemberSinceDate } from "../../utils/db/date";
+import useFollow from "../../hooks/useFollow";
 
 const ProfilePage = () => {
   const [coverImg, setCoverImg] = useState(null);
@@ -20,20 +24,18 @@ const ProfilePage = () => {
   const coverImgRef = useRef(null);
   const profileImgRef = useRef(null);
 
-  const isLoading = false;
-  const isMyProfile = true;
+  const { data: authUser } = useQuery({ queryKey: ["authUser"] });
+  const { follow } = useFollow();
+  const { username } = useParams();
 
-  const user = {
-    _id: "1",
-    fullName: "John Doe",
-    username: "johndoe",
-    profileImg: "/avatars/boy2.png",
-    coverImg: "/cover.png",
-    bio: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-    link: "https://youtube.com/@asaprogrammer_",
-    following: ["1", "2", "3"],
-    followers: ["1", "2", "3"],
-  };
+  const { data: user, isLoading } = useQuery({
+    queryKey: ["user"],
+    queryFn: () => getClientProfile(username),
+  });
+
+  const isMyProfile = authUser._id === user._id;
+  const joinedDate = formatMemberSinceDate(user.createdAt);
+  const isFollowing = authUser.following.includes(user._id);
 
   const handleImgChange = (e, state) => {
     const file = e.target.files[0];
@@ -119,13 +121,14 @@ const ProfilePage = () => {
                 </div>
               </div>
               <div className="flex justify-end px-4 mt-5">
-                {isMyProfile && <EditProfileModal />}
-                {!isMyProfile && (
+                {isMyProfile ? (
+                  <EditProfileModal />
+                ) : (
                   <button
                     className="btn btn-outline rounded-full btn-sm"
-                    onClick={() => alert("Followed successfully")}
+                    onClick={() => follow(user._id)}
                   >
-                    Follow
+                    {isFollowing ? "Following" : "Follow"}
                   </button>
                 )}
                 {(coverImg || profileImg) && (
@@ -166,7 +169,7 @@ const ProfilePage = () => {
                   <div className="flex gap-2 items-center">
                     <IoCalendarOutline className="w-4 h-4 text-slate-500" />
                     <span className="text-sm text-slate-500">
-                      Joined July 2021
+                      joined {joinedDate}
                     </span>
                   </div>
                 </div>
@@ -208,7 +211,7 @@ const ProfilePage = () => {
             </>
           )}
 
-          <Posts />
+          <Posts feedType={feedType} username={username} userId={user._id} />
         </div>
       </div>
     </>

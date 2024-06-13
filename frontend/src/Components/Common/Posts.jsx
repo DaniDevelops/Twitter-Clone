@@ -4,13 +4,17 @@ import { useQuery } from "react-query";
 import { getPosts } from "../../api-client";
 import { useEffect } from "react";
 
-const Posts = ({ feedType }) => {
+const Posts = ({ feedType, username, userId }) => {
   function generatePostsEndpoint() {
     switch (feedType) {
       case "forYou":
         return "api/posts/all";
       case "following":
         return "api/posts/following";
+      case "posts":
+        return `api/posts/${username}`;
+      case "likes":
+        return `api/posts/${userId}`;
       default:
         return "api/posts/all";
     }

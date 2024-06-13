@@ -75,8 +75,8 @@ export async function commentPost(req, res) {
     const comment = { userId, text };
     post.comment.push(comment);
     await post.save();
-
-    res.status(200).json({ message: "comment added succesfully" });
+    const updatedComments = post.comment;
+    res.status(200).json(updatedComments);
   } catch (error) {
     console.log("Error occured at commentPost: ", error.messsage);
     res.status(500).json({ message: "Internal Server Error" });

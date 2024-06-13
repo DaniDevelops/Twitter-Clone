@@ -9,7 +9,12 @@ import { useMutation, useQuery, useQueryClient } from "react-query";
 import { toast } from "react-hot-toast";
 
 import LoadingSpinner from "./LoadingSpinner";
-import { deleteClientPost, toggleClientLikes } from "../../api-client";
+import {
+  clientCommentPost,
+  deleteClientPost,
+  toggleClientLikes,
+} from "../../api-client";
+import { formatPostDate } from "../../utils/db/date";
 
 const Post = ({ post }) => {
   const [comment, setComment] = useState("");
@@ -17,6 +22,9 @@ const Post = ({ post }) => {
   const queryClient = useQueryClient();
 
   const postOwner = post.userId;
+  const isMyPost = authUser._id === postOwner._id;
+  const formattedDate = formatPostDate(post.createdAt);
+  const isLiked = post.likes.includes(authUser._id);
 
   const { mutate: deleteFn, isLoading: isDeleting } = useMutation({
     mutationFn: deleteClientPost,
@@ -44,11 +52,22 @@ const Post = ({ post }) => {
       toast.error(error.message);
     },
   });
-  const isMyPost = authUser._id === postOwner._id;
-  const formattedDate = "1h";
-  const isLiked = post.likes.includes(authUser._id);
-
-  const isCommenting = false;
+  const { mutate: commentFn, isLoading: isCommenting } = useMutation({
+    mutationFn: clientCommentPost,
+    onSuccess: (updatedComments) => {
+      queryClient.setQueryData({ queryKey: ["posts"] }, (oldData) => {
+        return oldData.map((p) => {
+          if (p._id === post._id) {
+            return { ...p, comment: updatedComments };
+          }
+          return p;
+        });
+      });
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
 
   const handleDeletePost = () => {
     deleteFn(postOwner._id);
@@ -56,10 +75,15 @@ const Post = ({ post }) => {
 
   const handlePostComment = (e) => {
     e.preventDefault();
+    if (isCommenting) return;
+    commentFn(post._id);
   };
 
-  const handleLikePost = () => {};
-  toggleLikeFn(post._id);
+  const handleLikePost = () => {
+    if (isLiking) return;
+    toggleLikeFn(post._id);
+  };
+
   return (
     <>
       <div className="flex gap-2 items-start p-4 border-b border-gray-700">

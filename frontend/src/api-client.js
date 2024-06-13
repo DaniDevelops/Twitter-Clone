@@ -91,3 +91,36 @@ export async function toggleClientLikes(postId) {
   if (!res.ok) throw new Error(data.message);
   return data;
 }
+export async function clientCommentPost(postId) {
+  const res = await fetch(`/api/posts/comment/${postId}`, {
+    method: "POST",
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message);
+  return data;
+}
+
+export async function getClientNotifications() {
+  const res = await fetch("/api/notifications/");
+
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message);
+  return data;
+}
+export async function deleteClientNotifications() {
+  const res = await fetch("/api/notifications/", {
+    method: "DELETE",
+  });
+
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message);
+  return data;
+}
+
+export async function getClientProfile(username) {
+  const res = await fetch(`/api/users/profile/${username}`);
+
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message);
+  return data;
+}

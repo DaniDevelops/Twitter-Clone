@@ -1,9 +1,9 @@
 import { Link } from "react-router-dom";
 import RightPanelSkeleton from "../Skeletons/RightPanelSkeletons";
-import { USERS_FOR_RIGHT_PANEL } from "../../utils/db/dummy";
 import { useQuery } from "react-query";
 import { getClientSuggestedUsers } from "../../api-client";
-import FollowButton from "./FollowButton";
+import LoadingSpinner from "./LoadingSpinner";
+import useFollow from "../../hooks/useFollow";
 
 const RightPanel = () => {
   const isLoading = false;
@@ -11,6 +11,7 @@ const RightPanel = () => {
     queryKey: ["suggestedUsers"],
     queryFn: getClientSuggestedUsers,
   });
+  const { follow, isPending } = useFollow();
 
   return (
     <div className="hidden lg:block my-4 mx-2">
@@ -49,7 +50,15 @@ const RightPanel = () => {
                   </div>
                 </div>
                 <div>
-                  <FollowButton user={user._id} />
+                  <button
+                    className="btn bg-white text-black hover:bg-white hover:opacity-90 rounded-full btn-sm"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      follow(user._id);
+                    }}
+                  >
+                    {isPending ? <LoadingSpinner size="sm" /> : Follow}
+                  </button>
                 </div>
               </Link>
             ))}

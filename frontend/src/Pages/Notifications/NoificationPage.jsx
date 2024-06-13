@@ -4,32 +4,30 @@ import LoadingSpinner from "../../Components/Common/LoadingSpinner";
 import { IoSettingsOutline } from "react-icons/io5";
 import { FaUser } from "react-icons/fa";
 import { FaHeart } from "react-icons/fa6";
+import { useMutation, useQuery, useQueryClient } from "react-query";
+import { deleteClientNotifications, getClientNotifications } from "../../api-client";
+import toast from "react-hot-toast";
 
 const NotificationPage = () => {
-  const isLoading = false;
-  const notifications = [
-    {
-      _id: "1",
-      from: {
-        _id: "1",
-        username: "johndoe",
-        profileImg: "/avatars/boy2.png",
-      },
-      type: "follow",
+  const queryClient = useQueryClient();
+
+  const { data: notifications, isLoading } = useQuery({
+    queryKey: ["notifications"],
+    queryFn: getClientNotifications,
+  });
+  const { mutate: deleteNotificationsFn, isLoading: isDeleting } = useMutation({
+    mutationFn: deleteClientNotifications,
+    onSuccess: () => {
+      toast.success("notifications deleted");
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
     },
-    {
-      _id: "2",
-      from: {
-        _id: "2",
-        username: "janedoe",
-        profileImg: "/avatars/girl1.png",
-      },
-      type: "like",
+    onError: () => {
+      throw new Error("problem deleting notifications");
     },
-  ];
+  });
 
   const deleteNotifications = () => {
-    alert("All notifications deleted");
+    deleteNotificationsFn();
   };
 
   return (
@@ -51,7 +49,7 @@ const NotificationPage = () => {
             </ul>
           </div>
         </div>
-        {isLoading && (
+        {(isLoading || isDeleting) && (
           <div className="flex justify-center h-full items-center">
             <LoadingSpinner size="lg" />
           </div>
